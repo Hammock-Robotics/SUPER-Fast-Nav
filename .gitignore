@@ -3,7 +3,6 @@
 /devel/
 /install/
 /logs/
-src/Mid360_simulation_plugin/
-src/iq_sim/
-src/mavlink/
-src/mavros/
+
+# Temporary files
+*.swp
