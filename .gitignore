@@ -1,0 +1,9 @@
+# Ignore build, devel, install, logs
+/build/
+/devel/
+/install/
+/logs/
+src/Mid360_simulation_plugin/
+src/iq_sim/
+src/mavlink/
+src/mavros/
