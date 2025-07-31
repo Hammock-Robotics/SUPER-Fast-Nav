@@ -1,7 +1,0 @@
-mavros/libmavconn
-/home/hammock/lucas_ws/devel/.private/libmavconn/cmake.lock /home/hammock/lucas_ws/devel/./cmake.lock
-/home/hammock/lucas_ws/devel/.private/libmavconn/share/libmavconn/cmake/libmavconnConfig-version.cmake /home/hammock/lucas_ws/devel/share/libmavconn/cmake/libmavconnConfig-version.cmake
-/home/hammock/lucas_ws/devel/.private/libmavconn/share/libmavconn/cmake/libmavconn-extras.cmake /home/hammock/lucas_ws/devel/share/libmavconn/cmake/libmavconn-extras.cmake
-/home/hammock/lucas_ws/devel/.private/libmavconn/share/libmavconn/cmake/libmavconnConfig.cmake /home/hammock/lucas_ws/devel/share/libmavconn/cmake/libmavconnConfig.cmake
-/home/hammock/lucas_ws/devel/.private/libmavconn/lib/libmavconn.so /home/hammock/lucas_ws/devel/lib/libmavconn.so
-/home/hammock/lucas_ws/devel/.private/libmavconn/lib/pkgconfig/libmavconn.pc /home/hammock/lucas_ws/devel/lib/pkgconfig/libmavconn.pc

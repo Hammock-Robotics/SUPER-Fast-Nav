@@ -6,3 +6,4 @@
 
 # Temporary files
 *.swp
+.catkin_tools/
