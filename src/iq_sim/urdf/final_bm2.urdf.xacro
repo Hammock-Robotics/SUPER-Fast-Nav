@@ -1,0 +1,1377 @@
+<?xml version="1.0" ?>
+<robot name="final_iris" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Dummy link -->
+  <link name="dummy_link"/>
+
+  <!-- Fixed joint between dummy_link and base_link 0.195-->
+  <joint name="fixed_joint" type="fixed">
+    <parent link="dummy_link"/>
+    <child link="base_link"/>
+    <!-- <origin xyz="0 0 0.195" rpy="0 0 0"/> -->
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+
+<link name="base_link">
+  <inertial>
+    <origin xyz="0.021820979583378187 0.002425267161519981 -0.12814008458382917" rpy="0 0 0"/>
+    <mass value="19.11159908920108"/>
+    <inertia ixx="1.056585" iyy="6.308996" izz="6.722629" ixy="0.029093" iyz="-0.013495" ixz="-0.02855"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://iq_sim/models/iris_base/meshes/bm2_body.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <!-- <material name="silver"/> -->
+  </visual>
+  <collision>
+    <origin xyz="0.0 0.0 0.0225" rpy="0 0 0"/>
+    <geometry>
+          <box size="1.3 1.3 0.25" />
+    </geometry>
+  </collision>
+  <collision>
+      <origin xyz="0.33 -0.01 -0.2" rpy="${-pi/8} 0 0"/>
+    <geometry >
+
+          <box size="2.2 0.15 0.45" />
+    </geometry>
+  </collision>
+
+  <collision>
+      <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+    <geometry >
+          <box size="1 0.65 0.4" />
+    </geometry>
+  </collision>
+</link>
+
+ 
+<!-- Velodyne joint -->
+<joint name="velodyne_joint" type="fixed">
+  <parent link="base_link"/>
+  <child link="velodyne_link"/>
+  <!-- <origin xyz="0 0 0.1" rpy="0 0 -1.5708"/> -->
+  <origin xyz="0 0 0.1" rpy="0 0 0"/>
+</joint>
+
+<!-- Velodyne physical link-->
+<link name="velodyne_link">
+  <inertial>
+    <mass value="0.5"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+  </inertial>
+  <visual>
+    <geometry>
+      <mesh filename="package://velodyne_description/meshes/HDL32E_base.dae"/>
+    </geometry>
+  </visual>
+</link> 
+
+
+<!-- Velodyne sensor definition -->
+<gazebo reference="velodyne_link">
+  <sensor type="ray" name="velodyne_sensor">
+    <pose>0 0 0 0 0 0</pose>
+    <update_rate>20.0</update_rate>
+    <always_on>true</always_on>
+    <visualize>false</visualize> 
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>180</samples>
+          <min_angle>-3.14</min_angle>
+          <max_angle>3.14</max_angle>
+        </horizontal>
+        <vertical>
+          <samples>64</samples>
+          <min_angle>-0.122173</min_angle>
+          <max_angle>0.907571</max_angle>
+        </vertical>
+      </scan>
+      <range>
+        <min>0.5</min>
+        <max>40.0</max>
+        <resolution>0.01</resolution>
+      </range>
+    </ray>
+    <plugin name="velodyne_plugin" filename="libgazebo_ros_velodyne_laser.so">
+  <topicName>/velodyne_points</topicName>
+  <frameName>velodyne_link</frameName>
+  <robotNamespace>/</robotNamespace>
+</plugin>
+
+  </sensor>
+</gazebo>
+
+
+  <joint name="final_iris/ground_truth/odometry_sensorgt_joint" type="revolute">
+    <parent link="dummy_link"/>
+    <child link="final_iris/ground_truth/odometry_sensorgt_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="1.0"/>
+    <limit effort="0.0" lower="0.0" upper="0.0" velocity="0.0"/>
+  </joint>
+
+  <link name="final_iris/ground_truth/odometry_sensorgt_link">
+    <inertial>
+      <mass value="0.15"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
+    </inertial>
+  </link>
+
+  <joint name="final_iris/imu_joint" type="revolute">
+    <parent link="dummy_link"/>
+    <child link="final_iris/imu_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="1.0"/>
+    <limit effort="0.0" lower="0.0" upper="0.0" velocity="0.0"/>
+  </joint>
+
+  <link name="final_iris/imu_link">
+    <inertial>
+      <mass value="0.15"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00002" iyz="0" izz="0.00002"/>
+    </inertial>
+  </link>
+
+
+<!-- 4 prop drone  -->
+
+  <!-- <joint name="rotor_0_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_0"/>
+    <origin rpy="0 0 0" xyz="0.33366 -0.335672 0.0495"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+   
+
+  </joint>
+
+  <joint name="rotor_1_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_1"/>
+    <origin rpy="0 0 0" xyz="-0.33366 0.335672 0.0495"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+   
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+  
+
+  </joint>
+
+  <joint name="rotor_2_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_2"/>
+    <origin rpy="0 0 0" xyz="0.33366 0.335647 0.04965"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+  
+
+  </joint>
+
+  <joint name="rotor_3_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_3"/>
+    <origin rpy="0 0 0" xyz="-0.333684 -0.335672 0.05015"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+  
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+   
+  </joint> -->
+
+
+<!-- 8 prop drone -->
+
+  <joint name="rotor_0_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_0"/>
+    <origin rpy="0 0 0" xyz="0.33366 -0.335672 0.0495"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_1_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_1"/>
+    <origin rpy="0 0 0" xyz="0.33366 0.335647 0.04965"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_2_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_2"/>
+    <origin rpy="0 0 0" xyz="-0.33366 0.335672 0.0495"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_3_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_3"/>
+    <origin rpy="0 0 0" xyz="-0.333684 -0.335672 0.05015"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_4_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_4"/>
+    <origin rpy="0 0 0" xyz="0.333043 0.336264 -0.05835"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_5_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_5"/>
+    <origin rpy="0 0 0" xyz="0.33366 -0.335672 -0.0585"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_6_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_6"/>
+    <origin rpy="0 0 0" xyz="-0.33366 -0.335672 -0.05835"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_7_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_7"/>
+    <origin rpy="0 0 0" xyz="-0.33366 0.335647 -0.0585"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+
+
+
+
+
+  <link name="rotor_0">
+    <inertial>
+      <mass value="0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <!-- <collision name="rotor_0">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision> -->
+    <visual name="rotor_0">
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/prop_ccw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_1">
+    <inertial>
+      <mass value="0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <!-- <collision name="rotor_1">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision> -->
+    <visual name="rotor_1">
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/prop_cw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_2">
+    <inertial>
+      <mass value="0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <!-- <collision name="rotor_2">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision> -->
+    <visual name="rotor_2">
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/prop_ccw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_3">
+    <inertial>
+      <mass value="0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <!-- <collision name="rotor_3">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision> -->
+    <visual name="rotor_3">
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/prop_cw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_4">
+    <inertial>
+      <mass value="0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <!-- <collision name="rotor_0">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision> -->
+    <visual name="rotor_4">
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/prop_ccw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_5">
+    <inertial>
+      <mass value="0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <!-- <collision name="rotor_1">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision> -->
+    <visual name="rotor_5">
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/prop_cw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_6">
+    <inertial>
+      <mass value="0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <!-- <collision name="rotor_2">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision> -->
+    <visual name="rotor_6">
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/prop_ccw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_7">
+    <inertial>
+      <mass value="0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <!-- <collision name="rotor_3">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision> -->
+    <visual name="rotor_7">
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/prop_cw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+  </link>
+
+
+
+  <gazebo reference="base_link">
+  	<material>Gazebo/FlatBlack</material>
+  	<maxVel>100.0</maxVel>
+  	<minDepth>0.001</minDepth>
+  	<mu1>1.0</mu1>
+  	<mu2>1.0</mu2>
+    <velocity_decay>
+      <linear>0.0</linear>
+      <angular>0.0</angular>
+    </velocity_decay>
+  </gazebo>
+
+  <gazebo reference="final_iris/ground_truth/odometry_sensorgt_joint">
+  	<implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="final_iris/imu_joint">
+  	<implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="final_iris/imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <pose>0 0 0 3.141593 0 0</pose>
+      <always_on>1</always_on>
+      <update_rate>1000.0</update_rate>    
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+          <topicName>imu</topicName>
+          <bodyName>final_iris/imu_link</bodyName>
+          <updateRateHZ>10.0</updateRateHZ>
+          <gaussianNoise>0.0</gaussianNoise>
+          <xyzOffset>0 0 0</xyzOffset>
+          <rpyOffset>0 0 0</rpyOffset>
+          <frameName>final_iris/imu_link</frameName>
+          <initialOrientationAsReference>false</initialOrientationAsReference>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="rotor_0">
+    <material>Gazebo/Blue</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_0_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_1">
+    <material>Gazebo/DarkGrey</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_1_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_2">
+    <material>Gazebo/Blue</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_2_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_3">
+    <material>Gazebo/DarkGrey</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_3_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+    <gazebo reference="rotor_4">
+    <material>Gazebo/Blue</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_4_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_5">
+    <material>Gazebo/DarkGrey</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_5_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_6">
+    <material>Gazebo/Blue</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_6_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_7">
+    <material>Gazebo/DarkGrey</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_7_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_0_blade_1" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>0.084 0 0</cp> -->
+      <cp>0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+      
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_0</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_0_blade_2" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>-0.084 0 0</cp> -->
+      <cp>-0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_0</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_1_blade_1" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>0.084 0 0</cp> -->
+      <cp>0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+      
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_1</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_1_blade_2" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>-0.084 0 0</cp> -->
+      <cp>-0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_1</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_2_blade_1" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>0.084 0 0</cp> -->
+      <cp>0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+      
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_2</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_2_blade_2" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>-0.084 0 0</cp> -->
+      <cp>-0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_2</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_3_blade_1" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>0.084 0 0</cp> -->
+      <cp>0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+      
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_3</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_3_blade_2" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>-0.084 0 0</cp> -->
+      <cp>-0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_3</link_name>
+    </plugin>
+  </gazebo>
+
+    <gazebo>
+    <plugin name="rotor_4_blade_1" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>0.084 0 0</cp> -->
+      <cp>0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+      
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_4</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_4_blade_2" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>-0.084 0 0</cp> -->
+      <cp>-0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_4</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_5_blade_1" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>0.084 0 0</cp> -->
+      <cp>0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+      
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_5</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_5_blade_2" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>-0.084 0 0</cp> -->
+      <cp>-0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_5</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_6_blade_1" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>0.084 0 0</cp> -->
+      <cp>0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+      
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_6</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_6_blade_2" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>-0.084 0 0</cp> -->
+      <cp>-0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_6</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_7_blade_1" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>0.084 0 0</cp> -->
+      <cp>0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+      
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_7</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_7_blade_2" filename="libLiftDragPlugin.so">
+      <!-- <a0>0.1</a0> -->
+      <a0>0.16</a0>               <!-- lift-curve slope -->
+
+      <!-- <alpha_stall>1.4</alpha_stall> -->
+      <alpha_stall>1.2</alpha_stall>    <!-- stall angle, ~70° in radians -->
+
+      <!-- <cla>0.2500</cla> -->
+      <cla>0.36</cla>            <!-- lift coefficient per rad -->
+
+      <!-- <cda>0.10</cda> -->
+      <cda>0.16</cda>            <!-- drag coefficient per rad -->
+
+      <!-- <cma>0.00</cma> -->
+      <cma>0.00</cma>            <!-- moment coefficient -->
+
+      <!-- <cla_stall>-0.025</cla_stall> -->
+      <cla_stall>-0.06</cla_stall>   <!-- lift coef in stall -->
+
+      <!-- <cda_stall>0.0</cda_stall> -->
+      <cda_stall>0.06</cda_stall>    <!-- drag coef in stall -->
+
+      <!-- <cma_stall>0.0</cma_stall> -->
+      <cma_stall>0.00</cma_stall>    <!-- moment coef in stall -->
+
+      <!-- <area>0.2</area> -->
+      <area>0.245</area>             <!-- Prop disk area = π·(0.2794 m)² ≈ 0.245 m² -->
+
+      <air_density>1.2041</air_density>
+
+      <!-- <cp>-0.084 0 0</cp> -->
+      <cp>-0.18 0 0</cp>              <!-- Center-of-pressure ≈ 0.65·radius → 0.18 m out on the blade -->
+
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_7</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="arducopter_plugin" filename="libArduPilotPlugin.so">
+      <fdm_addr>127.0.0.1</fdm_addr>
+      <fdm_port_in>9002</fdm_port_in>
+      <fdm_port_out>9003</fdm_port_out>
+      <modelXYZToAirplaneXForwardZDown>0 0 0 3.141593 0 0</modelXYZToAirplaneXForwardZDown>
+      <gazeboXYZToNED>0 0 0 3.141593 0 0</gazeboXYZToNED>
+      <imuName>final_iris::final_iris/imu_link::imu_sensor</imuName>
+      <connectionTimeoutMaxCount>5</connectionTimeoutMaxCount>
+      <control channel="0">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <!-- <p_gain>0.20</p_gain> -->
+        <p_gain>0.10</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>250</cmd_max>
+        <cmd_min>-250</cmd_min>
+        <!-- <cmd_max>900</cmd_max> -->
+        <!-- <cmd_min>-900</cmd_min> -->
+        <jointName>final_iris::rotor_0_joint</jointName>
+        <!-- <multiplier>838</multiplier> -->
+        <multiplier>678</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="1">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <!-- <p_gain>0.20</p_gain> -->
+        <p_gain>0.10</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>250</cmd_max>
+        <cmd_min>-250</cmd_min>
+        <!-- <cmd_max>900</cmd_max> -->
+        <!-- <cmd_min>-900</cmd_min> -->
+        <jointName>final_iris::rotor_1_joint</jointName>
+        <!-- <multiplier>838</multiplier> -->
+        <multiplier>-678</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="2">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <!-- <p_gain>0.20</p_gain> -->
+        <p_gain>0.10</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>250</cmd_max>
+        <cmd_min>-250</cmd_min>
+        <!-- <cmd_max>900</cmd_max> -->
+        <!-- <cmd_min>-900</cmd_min> -->
+        <jointName>final_iris::rotor_2_joint</jointName>
+        <!-- <multiplier>-838</multiplier> -->
+        <multiplier>678</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="3">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <!-- <p_gain>0.20</p_gain> -->
+        <p_gain>0.10</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>250</cmd_max>
+        <cmd_min>-250</cmd_min>
+        <!-- <cmd_max>900</cmd_max> -->
+        <!-- <cmd_min>-900</cmd_min> -->
+        <jointName>final_iris::rotor_3_joint</jointName>
+        <!-- <multiplier>-838</multiplier> -->
+        <multiplier>-678</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="4">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <!-- <p_gain>0.20</p_gain> -->
+        <p_gain>0.10</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>250</cmd_max>
+        <cmd_min>-250</cmd_min>
+        <!-- <cmd_max>900</cmd_max> -->
+        <!-- <cmd_min>-900</cmd_min> -->
+        <jointName>final_iris::rotor_4_joint</jointName>
+        <!-- <multiplier>838</multiplier> -->
+        <multiplier>678</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="5">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <!-- <p_gain>0.20</p_gain> -->
+        <p_gain>0.10</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>250</cmd_max>
+        <cmd_min>-250</cmd_min>
+        <!-- <cmd_max>900</cmd_max> -->
+        <!-- <cmd_min>-900</cmd_min> -->
+        <jointName>final_iris::rotor_5_joint</jointName>
+        <!-- <multiplier>838</multiplier> -->
+        <multiplier>-678</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="6">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <!-- <p_gain>0.20</p_gain> -->
+        <p_gain>0.10</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>250</cmd_max>
+        <cmd_min>-250</cmd_min>
+        <!-- <cmd_max>900</cmd_max> -->
+        <!-- <cmd_min>-900</cmd_min> -->
+        <jointName>final_iris::rotor_6_joint</jointName>
+        <!-- <multiplier>-838</multiplier> -->
+        <multiplier>678</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="7">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <!-- <p_gain>0.20</p_gain> -->
+        <p_gain>0.10</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>250</cmd_max>
+        <cmd_min>-250</cmd_min>
+        <!-- <cmd_max>900</cmd_max> -->
+        <!-- <cmd_min>-900</cmd_min> -->
+        <jointName>final_iris::rotor_7_joint</jointName>
+        <!-- <multiplier>-838</multiplier> -->
+        <multiplier>-678</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>      
+    </plugin>
+  </gazebo>  
+
+
+</robot>
+
