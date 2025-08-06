@@ -19,6 +19,7 @@ class VelodyneBlockFilter:
                          PointCloud2,
                          self.cb,
                          queue_size=1)
+                         
         self.pub = rospy.Publisher('/velodyne_points_filtered',
                                    PointCloud2,
                                    queue_size=1)
