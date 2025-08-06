@@ -2,15 +2,23 @@
 	<!-- vim: set ft=xml noet : -->
 	<!-- Experimental launch script for APM based Drone -->
 
-	<!--<arg name="fcu_url" default="serial:///dev/ttyACM0:57600"/> Real drone -->
-	<arg name="fcu_url" default="udp://127.0.0.1:14550@14555" />  <!--SITL-->
+	<!-- UDP actual drone  -->
+	<arg name="fcu_url" default="serial:///dev/ttyACM0:57600"/> 
+
+	<!-- UDP sitl -->
+	<!-- <arg name="fcu_url" default="udp://127.0.0.1:14550@14555" />  SITL -->
 	<arg name="gcs_url" default="" />
 	<arg name="tgt_system" default="1" />
 	<arg name="tgt_component" default="1" />
 	<arg name="log_output" default="screen" />
 	<arg name="respawn_mavros" default="true"/>
 	<arg name="mavros_ns" default="/"/>
-	<arg name="config_yaml" default="$(find mavros)/launch/apm_config.yaml" />
+
+	<!-- configs used -->
+	<!-- <arg name="config_yaml" default="$(find mavros)/launch/apm_config.yaml" /> -->
+	<arg name="config_yaml" default="$(find iq_sim)/launch/apm_config_iris.yaml" />
+
+
 
 	  <!-- ─────────── MAVROS ENU + TF settings ─────────── -->
   	<!-- force MAVROS to publish both imu→tf and odom→tf -->
