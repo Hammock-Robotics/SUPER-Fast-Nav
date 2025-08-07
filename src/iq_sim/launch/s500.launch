@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+    
+    <!-- Static transform publisher to connect world to the map -->
+    <node pkg="tf" type="static_transform_publisher" name="world_to_camera_init" args="0 0 0 0 0 0 world camera_init 100"/>
+       
+    <!-- <node pkg="iq_sim" type="base_footprint_broadcaster.py" name="base_footprint_broadcaster" output="screen"/> -->
+    <!-- <node pkg="iq_sim" type="point_cloud_transformer.py" name="point_cloud_transformer" output="screen"/> -->
+    <!-- <node pkg="iq_sim" type="point_cloud_mount_filter_livox.py" name="point_mount_filter" output="screen"/> -->
+    <node pkg="iq_sim" type="super_to_mavros_v2.py" name="super_to_mavros" output="screen"/>
+    <node pkg="iq_sim" type="fastlio_to_mavros_viso.py" name="fastlio_to_mavros_viso" output="screen"/>
+ 
+</launch>
+
