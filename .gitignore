@@ -7,3 +7,7 @@
 # Temporary files
 *.swp
 .catkin_tools/
+
+# ignore Python bytecode
+__pycache__/
+*.py[cod]
