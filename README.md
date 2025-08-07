@@ -1,6 +1,4 @@
-# My Catkin Workspace
-
-This repository contains the Catkin workspace for the Auto-Nav project.
+# Catkin Workspace
 
 ## Packages
 
