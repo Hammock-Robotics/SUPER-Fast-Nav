@@ -1,3 +1,5 @@
+<!-- URDF IRIS USING VELODYNE -->
+
 <?xml version="1.0" ?>
 <robot name="final_iris" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
