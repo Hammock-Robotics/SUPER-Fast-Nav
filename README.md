@@ -11,7 +11,9 @@ The following packages were installed according to the Intelligent Quad tutorial
 
 ## Usage
 
+```
 cd ~/catkin_ws
 catkin build
 source devel/setup.bash
 roslaunch iq_sim dash_runway.launch
+```
