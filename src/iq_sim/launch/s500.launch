@@ -7,9 +7,15 @@
        
     <!-- <node pkg="iq_sim" type="base_footprint_broadcaster.py" name="base_footprint_broadcaster" output="screen"/> -->
     <!-- <node pkg="iq_sim" type="point_cloud_transformer.py" name="point_cloud_transformer" output="screen"/> -->
-    <!-- <node pkg="iq_sim" type="point_cloud_mount_filter_livox.py" name="point_mount_filter" output="screen"/> -->
+    <node pkg="iq_sim" type="point_cloud_mount_filter_livox.py" name="point_mount_filter" output="screen"/>
     <node pkg="iq_sim" type="super_to_mavros_v2.py" name="super_to_mavros" output="screen"/>
     <node pkg="iq_sim" type="fastlio_to_mavros_viso.py" name="fastlio_to_mavros_viso" output="screen"/>
+
+    <param name="robot_description" command="xacro '$(find iq_sim)/urdf/s500_dummy.urdf.xacro' "/>
+
+    <!-- Other necessary nodes -->
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+    <!-- <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="joint_state_publisher_gui"/> -->
  
 </launch>
-
