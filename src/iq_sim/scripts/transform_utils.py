@@ -83,3 +83,7 @@ class TransformUtils:
 
     def rad_to_deg(yaw_rad):
         return (math.degrees(yaw_rad) + 360) % 360
+    
+    def quat_xyzw_to_yaw(self, qx, qy, qz, qw):
+        _, _, yaw = transformations.euler_from_quaternion([qx, qy, qz, qw])
+        return yaw

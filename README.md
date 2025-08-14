@@ -17,3 +17,6 @@ catkin build
 source devel/setup.bash
 roslaunch iq_sim dash_runway.launch
 ```
+## Important
+
+Change the address of the UDP port for SITL/physical drone

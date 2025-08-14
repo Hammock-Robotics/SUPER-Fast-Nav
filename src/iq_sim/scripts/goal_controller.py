@@ -14,6 +14,9 @@ from sensor_msgs.msg import NavSatFix
 from nav_msgs.msg import Odometry
 from transform_utils import TransformUtils
 
+WP_SOURCE = "mission"       # flag to read from mission planner or local goal file
+FILE_PATH = "~/Desktop/waypoints.csv"              # file path of the local goal file
+PAUSE_DURATION = 2          # number of seconds to pause after reaching a waypoint
 
 class WaypointNavigator:
     def __init__(self):
@@ -22,6 +25,7 @@ class WaypointNavigator:
 
         # ─── Initialize variables ────────────────────────────────────
         self.waypoints = []
+        self.local_wps = []
         self.wp_headings = []
         self.current_goal_index = None
         self.current_mavros_mode = None
@@ -55,10 +59,10 @@ class WaypointNavigator:
         # get GPS + odom + waypoints early, but DO NOT yet subscribe to FSM
         rospy.Subscriber('/mavros/global_position/global',
                          NavSatFix, self.current_gps_callback)
+        
         rospy.Subscriber('/mavros/local_position/odom',
                          Odometry, self.current_local_position_callback)
         
-
         rospy.Subscriber('/mavros/state',
                          State, self.mavros_state_callback)
         
@@ -90,9 +94,13 @@ class WaypointNavigator:
 
         # pull mission from Pixhawk
         rospy.loginfo("Pilot turned on GUIDED mode, proceeding.")
-        self.pull_waypoints()
-        rospy.Subscriber('/mavros/mission/waypoints',
-                         WaypointList, self.waypoints_callback)
+        # after geo.update_origin(...)
+        if WP_SOURCE == "mission":
+            self.pull_waypoints()
+            rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.waypoints_callback)
+        else:  # "file"
+            self.load_local_csv_waypoints(FILE_PATH)
+            rospy.loginfo("Loaded %d file waypoints from %s", len(self.local_wps), FILE_PATH)
 
         # wait for GPS and odometry before proceeding
         rospy.loginfo("Waiting for first GPS message…")
@@ -233,8 +241,28 @@ class WaypointNavigator:
             rospy.signal_shutdown("Mission complete")
             return
 
-        wp = self.waypoints[self.current_goal_index]
-        print(wp)
+        if WP_SOURCE == "mission":
+            wp = self.waypoints[self.current_goal_index]
+            lat, lon, alt = wp.x_lat, wp.y_long, wp.z_alt
+            yaw_rad = self.wp_headings[self.current_goal_index]
+            goal = self.geo.make_pose(lat, lon, alt, yaw_rad)
+
+        elif WP_SOURCE == "file":
+            rec = self.local_wps[self.current_goal_index]       # {"pos":(x,y,z), "quat":(...), "yaw":...}
+            x, y, z = rec["pos"]
+            goal = PoseStamped()
+            goal.header.frame_id = rospy.get_param("~frame_id", "world")
+            goal.pose.position.x = x
+            goal.pose.position.y = y
+            goal.pose.position.z = z
+
+            # Safer for planners: flatten to yaw-only
+            yaw_rad = rec["yaw"]
+            goal.pose.orientation = self.geo.yaw_to_quat(yaw_rad)
+
+
+        print(f"WAYPOINTS -source {WP_SOURCE}: {wp}")
+
         lat, lon, alt = wp.x_lat, wp.y_long, wp.z_alt
         yaw_rad = self.wp_headings[self.current_goal_index] 
 
@@ -284,6 +312,38 @@ class WaypointNavigator:
             return False
         return self.current_local_z >= hover_threshold
     
+
+    def load_local_csv_waypoints(self, path):
+        """Parse x,y,z,qx,qy,qz,qw per line → list of dicts."""
+        wps = []
+        with open(path, 'r') as f:
+            for ln in f:
+                ln = ln.strip()
+                if not ln or ln.startswith('#'):
+                    continue
+                parts = [p.strip() for p in ln.split(',')]
+                if len(parts) != 7:
+                    rospy.logwarn(f"Skipping malformed line: {ln}")
+                    continue
+                x,y,z,qx,qy,qz,qw = map(float, parts)
+
+                # (optional) normalize quaternion in case of float drift
+                n = math.sqrt(qx*qx + qy*qy + qz*qz + qw*qw)
+                if n > 0:
+                    qx,qy,qz,qw = qx/n, qy/n, qz/n, qw/n
+
+                # (optional) compute yaw if you want it around later
+                yaw = self.geo.quat_xyzw_to_yaw(qx, qy, qz, qw)  # add this tiny util or reuse TransformUtils
+
+                wps.append({
+                    "pos": (x, y, z),
+                    "quat": (qx, qy, qz, qw),
+                    "yaw": yaw,  # handy if you later want Z-only orientation
+                })
+        if not wps:
+            rospy.logwarn(f"No waypoints loaded from {path}")
+        self.local_wps = wps
+        self.current_goal_index = 0
 
     # unused -- but keep here 
     def update_goal_if_needed(self):
