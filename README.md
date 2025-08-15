@@ -20,3 +20,5 @@ roslaunch iq_sim dash_runway.launch
 ## Important
 
 Change the address of the UDP port for SITL/physical drone
+Change imu, extrinsic T in mid360 yaml
+Change the click height in the click_demo config in order to publish variable z heights
