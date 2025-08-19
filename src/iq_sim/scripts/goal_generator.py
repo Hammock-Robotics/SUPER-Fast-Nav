@@ -12,9 +12,9 @@ HOME_LON = 149.1652374
 spacing = 9
 rows = 5
 TREE_COORDS = [(i*spacing, j*spacing) for i in range(rows) for j in range(rows) if not (i == 0 and j == 0)]
-RADIUS = 1.0
+RADIUS = 1.5
 NUM_POINTS = 4
-ALTITUDE = 5.0
+ALTITUDE = 3.5
 HOLD_TIME = 2.0
 YAW_RATE = 30.0
 OUTPUT_FILE = Path("multi_tree_orbit.waypoints")

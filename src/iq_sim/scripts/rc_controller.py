@@ -13,6 +13,7 @@ from std_msgs.msg import String
 from sensor_msgs.msg import NavSatFix
 from nav_msgs.msg import Odometry
 from transform_utils import TransformUtils
+from pathlib import Path
 
 WP_SOURCE = "file"       # flag to read from "mission" planner or local goal "file"
 FILE_PATH = "/home/hammock/Desktop/waypoints.csv" # file path of the local goal file
@@ -50,6 +51,11 @@ class WaypointNavigator:
         self.last_update_position = None
         self.got_odom = False
 
+        self.mission_state = "IDLE"
+        self.ready = False
+        self.switch_state = "MID"
+        self.prev_switch_state = self.switch_state
+
         # initialise the TransformUtils
         self.geo = TransformUtils(self.origin_lat, self.origin_lon, self.origin_local_x, self.origin_local_y)
 
@@ -65,6 +71,9 @@ class WaypointNavigator:
         
         rospy.Subscriber('/mavros/state',
                          State, self.mavros_state_callback)
+        
+        rospy.Subscriber('/rc/switch_state', 
+                         String, self.switch_state_callback)
         
         # give ROS a moment to connect  
         rospy.sleep(0.5)
@@ -83,11 +92,11 @@ class WaypointNavigator:
             if self.current_mavros_mode == 'GUIDED':
                 break
 
-            # timeout?
-            if rospy.Time.now() - start > timeout:
-                rospy.logerr("Failed to turn on GUIDED mode within %.1fs, aborting mission.", timeout.to_sec())
-                rospy.signal_shutdown("GUIDED MODE not activated")
-                return
+            # # timeout?
+            # if rospy.Time.now() - start > timeout:
+            #     rospy.logerr("Failed to turn on GUIDED mode within %.1fs, aborting mission.", timeout.to_sec())
+            #     rospy.signal_shutdown("GUIDED MODE not activated")
+            #     return
 
             rate.sleep()
     
@@ -99,10 +108,10 @@ class WaypointNavigator:
             self.pull_waypoints()
             rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.waypoints_callback)
             
-        else:  # "file"
-            self.load_local_csv_waypoints(FILE_PATH)
-            rospy.loginfo("Loaded %d file waypoints from %s", len(self.local_wps), FILE_PATH)
-            print(f"waypoints: {self.local_wps}")
+        #else:  # "file"
+        #    self.load_local_csv_waypoints(FILE_PATH)
+        #    rospy.loginfo("Loaded %d file waypoints from %s", len(self.local_wps), FILE_PATH)
+        #    print(f"waypoints: {self.local_wps}")
 
         # wait for GPS and odometry before proceeding
         rospy.loginfo("Waiting for first GPS message…")
@@ -131,12 +140,14 @@ class WaypointNavigator:
                                 self.origin_local_x,
                                 self.origin_local_y)
 
+        self.ready = True
         
 
         # let callbacks drive waypoint publication
         # only now subscribe to FSM state changes
+
         rospy.Subscriber('/super_fsm_state',
-                         String, self.fsm_state_callback)
+                        String, self.fsm_state_callback)
         rospy.spin()
 
     def pull_waypoints(self):
@@ -220,7 +231,13 @@ class WaypointNavigator:
     
 
         if state == 'INIT':
-            self.advance_to_next_waypoint()
+            # switch move from mid to bottom?
+            if self.mission_state == 'RUNNING':
+                self.advance_to_next_waypoint()
+            else:
+                rospy.loginfo("[FSM] INIT seen but mission_state=%s → waiting for RC start", self.mission_state)
+            return
+        
         # CHANGED PAUSING. continuing after pilot switches to loiter and then back to guided mode
         elif prev == 'PAUSING' and state == 'WAIT_GOAL':
             pass
@@ -245,8 +262,9 @@ class WaypointNavigator:
         rospy.loginfo(f"[ADV] src={src} idx={self.current_goal_index} total={total}")
 
         if self.current_goal_index >= total:
-            rospy.loginfo("All waypoints done — shutting down.")
-            rospy.signal_shutdown("Mission complete")
+            #instead of rospy.signal_shutdown
+            self.mission_state = "COMPLETE"
+            rospy.loginfo("Mission complete — flip RC MID→RIGHT to restart (will reload waypoints).")
             return
 
         if src == 'mission':
@@ -287,8 +305,9 @@ class WaypointNavigator:
 
         # GUIDED into LOITER?
         if prev == "GUIDED" and new_mode == "LOITER":
-            rospy.loginfo("Mode LOITER: pausing on goal #%d", self.current_goal_index-1)
-            self.paused_goal = self.last_sent_goal
+            if self.current_goal_index:
+                rospy.loginfo("Mode LOITER: pausing on goal #%d", self.current_goal_index-1)
+                self.paused_goal = self.last_sent_goal
 
         #  LOITER back into GUIDED?
         if prev == "LOITER" and new_mode == "GUIDED" and self.paused_goal:
@@ -336,6 +355,48 @@ class WaypointNavigator:
             rospy.logwarn(f"No waypoints loaded from {path}")
         self.local_wps = wps
         self.current_goal_index = 0
+
+    def switch_state_callback(self, msg):
+        val = (msg.data or "").strip().upper()  
+        if val not in {"TOP", "MID", "BOTTOM"}:
+            rospy.logwarn("Unexpected switch state: %r", val)
+            return
+        if val != self.switch_state:
+            self.switch_state = val
+            rospy.loginfo("Switch state = %s", self.switch_state)
+
+        prev = self.prev_switch_state
+        self.prev_switch_state = self.switch_state
+
+        if self.ready and prev == "MID" and self.switch_state == "BOTTOM":
+            if self.mission_state in ("IDLE", "COMPLETE"):
+
+                if WP_SOURCE == "file":
+                    # 1) File must exist
+                    if not Path(FILE_PATH).is_file():
+                        rospy.logwarn("[RC] Start requested, but CSV not found: %s — not starting.", FILE_PATH)
+                        return
+
+                    # 2) Load and require at least 1 valid row (or use self.min_csv_rows if you have it)
+                    self.load_local_csv_waypoints(FILE_PATH)
+                    if len(self.local_wps) < 1:   # or: < self.min_csv_rows
+                        rospy.logwarn("[RC] CSV has %d valid waypoint(s); need at least 1 — not starting.",
+                                    len(self.local_wps))
+                        return
+
+                else:  # "mission"
+                    self.pull_waypoints()
+                    if not self.waypoints:
+                        rospy.logwarn("[RC] No mission waypoints on Pixhawk — not starting.")
+                        return
+
+                # Only reaches here when checks pass
+                self.current_goal_index = 0
+                self.mission_state = "RUNNING"
+                rospy.loginfo("[RC] Start/Restart requested → publishing first waypoint")
+                self.advance_to_next_waypoint()
+
+
 
     # unused -- but keep here 
     def update_goal_if_needed(self):

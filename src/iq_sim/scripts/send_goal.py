@@ -10,13 +10,11 @@ def send_goal():
     rospy.init_node("send_goal_node")
     pub = rospy.Publisher("/goal", PoseStamped, queue_size=1)
     
-    rospy.sleep(1.0)  # Laisse le temps � ROS d'�tablir la connexion
+    rospy.sleep(1.0)  
 
     goal = PoseStamped()
     goal.header.frame_id = "world"
     goal.header.stamp = rospy.Time.now()
-
-    # Coordonn�es du goal (� adapter selon ta carte)
     goal.pose.position.x = 1
     goal.pose.position.y = 1
     goal.pose.position.z = 5

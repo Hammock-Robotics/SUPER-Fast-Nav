@@ -10,7 +10,7 @@ class RCWaypointSaver:
 
         # --- Config ---
         self.file_path = os.path.expanduser("~/Desktop/waypoints.csv")
-        # self.channel_idx = rospy.get_param("~channel_idx", 6)  # sitl   ch7 => index 6
+        #self.channel_idx = rospy.get_param("~channel_idx", 6)  # sitl   ch7 => index 6
         self.channel_idx = rospy.get_param("~channel_idx", 10)  # drone ch11 => index 10
         # Hysteresis thresholds (µs)
         self.top_max = rospy.get_param("~top_max", 1300)        # < 1300 -> TOP

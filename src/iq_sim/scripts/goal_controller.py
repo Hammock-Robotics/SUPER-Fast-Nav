@@ -14,8 +14,8 @@ from sensor_msgs.msg import NavSatFix
 from nav_msgs.msg import Odometry
 from transform_utils import TransformUtils
 
-WP_SOURCE = "mission"       # flag to read from mission planner or local goal file
-FILE_PATH = "~/Desktop/waypoints.csv"              # file path of the local goal file
+WP_SOURCE = "file"       # flag to read from "mission" planner or local goal "file"
+FILE_PATH = "/home/hammock/Desktop/waypoints.csv" # file path of the local goal file
 PAUSE_DURATION = 2          # number of seconds to pause after reaching a waypoint
 
 class WaypointNavigator:
@@ -98,9 +98,11 @@ class WaypointNavigator:
         if WP_SOURCE == "mission":
             self.pull_waypoints()
             rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.waypoints_callback)
+            
         else:  # "file"
             self.load_local_csv_waypoints(FILE_PATH)
             rospy.loginfo("Loaded %d file waypoints from %s", len(self.local_wps), FILE_PATH)
+            print(f"waypoints: {self.local_wps}")
 
         # wait for GPS and odometry before proceeding
         rospy.loginfo("Waiting for first GPS message…")
@@ -231,57 +233,47 @@ class WaypointNavigator:
         
 
     def advance_to_next_waypoint(self):
-        # guard against missing origin
         if not hasattr(self, 'origin_lat'):
             rospy.logwarn("Origin not set yet; skipping waypoint publish")
             return
 
-        if self.current_goal_index >= len(self.waypoints):
+        if self.current_goal_index is None:
+            self.current_goal_index = 0
+
+        src   = 'mission' if WP_SOURCE == 'mission' else 'file'
+        total = len(self.waypoints) if src == 'mission' else len(self.local_wps)
+        rospy.loginfo(f"[ADV] src={src} idx={self.current_goal_index} total={total}")
+
+        if self.current_goal_index >= total:
             rospy.loginfo("All waypoints done — shutting down.")
             rospy.signal_shutdown("Mission complete")
             return
 
-        if WP_SOURCE == "mission":
-            wp = self.waypoints[self.current_goal_index]
-            lat, lon, alt = wp.x_lat, wp.y_long, wp.z_alt
+        if src == 'mission':
+            wp      = self.waypoints[self.current_goal_index]
             yaw_rad = self.wp_headings[self.current_goal_index]
-            goal = self.geo.make_pose(lat, lon, alt, yaw_rad)
-
-        elif WP_SOURCE == "file":
-            rec = self.local_wps[self.current_goal_index]       # {"pos":(x,y,z), "quat":(...), "yaw":...}
-            x, y, z = rec["pos"]
-            goal = PoseStamped()
-            goal.header.frame_id = rospy.get_param("~frame_id", "world")
-            goal.pose.position.x = x
-            goal.pose.position.y = y
-            goal.pose.position.z = z
-
-            # Safer for planners: flatten to yaw-only
+            goal    = self.geo.make_pose(wp.x_lat, wp.y_long, wp.z_alt, yaw_rad)
+        else:  # file
+            rec     = self.local_wps[self.current_goal_index]   # {"pos":(x,y,z), "yaw":...}
+            x,y,z   = rec["pos"]
             yaw_rad = rec["yaw"]
-            goal.pose.orientation = self.geo.yaw_to_quat(yaw_rad)
+            goal    = PoseStamped()
+            goal.header.frame_id = rospy.get_param("~frame_id", "world")
+            goal.pose.position.x, goal.pose.position.y, goal.pose.position.z = x, y, z
+            qx, qy, qz, qw = self.geo.yaw_to_quat(yaw_rad)  # ensure this returns plain floats, not a Quaternion msg
+            goal.pose.orientation.x = float(qx)
+            goal.pose.orientation.y = float(qy)
+            goal.pose.orientation.z = float(qz)
+            goal.pose.orientation.w = float(qw)
 
-
-        print(f"WAYPOINTS -source {WP_SOURCE}: {wp}")
-
-        lat, lon, alt = wp.x_lat, wp.y_long, wp.z_alt
-        yaw_rad = self.wp_headings[self.current_goal_index] 
-
-        goal = self.geo.make_pose(lat, lon, alt, yaw_rad)
         goal.header.stamp = rospy.Time.now()
         self.goal_pub.publish(goal)
         self.last_sent_goal = goal
 
-
         yaw_deg = (math.degrees(yaw_rad) + 360) % 360
-
-        rospy.loginfo(
-            f"→ Published waypoint #{self.current_goal_index}"
-            f" -- x: {goal.pose.position.x:.2f},"
-            f" y: {goal.pose.position.y:.2f},"
-            f" z: {goal.pose.position.z:.2f},"
-            f" yaw: {yaw_deg:.1f}°"
-        )
-
+        rospy.loginfo(f"→ Published wp #{self.current_goal_index} ({src}) -- "
+                    f"x:{goal.pose.position.x:.2f}, y:{goal.pose.position.y:.2f}, "
+                    f"z:{goal.pose.position.z:.2f}, yaw:{yaw_deg:.1f}°")
 
         self.current_goal_index += 1
         self.last_update_position = (self.current_local_x, self.current_local_y)
