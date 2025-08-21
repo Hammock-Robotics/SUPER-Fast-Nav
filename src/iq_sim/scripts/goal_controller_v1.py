@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# v1 + preflight checks for takeoff altitude and guided mode  --sets GUIDED mode if not set
-# V2 + added PAUSING mode instead of using EMER_STOP
-# V3 + change receiving heading commands as well, and refactoring with geo/Transform Utils
-
 import rospy
 import math
 from mavros_msgs.srv import WaypointPull
@@ -14,14 +9,13 @@ from sensor_msgs.msg import NavSatFix
 from nav_msgs.msg import Odometry
 from transform_utils import TransformUtils
 
-WP_SOURCE = "file"       # flag to read from "mission" planner or local goal "file"
-FILE_PATH = "/home/hammock/Desktop/waypoints.csv" # file path of the local goal file
-PAUSE_DURATION = 2          # number of seconds to pause after reaching a waypoint
+
+PAUSE_DURATION = 2  # number of seconds to pause after reaching a waypoint
+
 
 class WaypointNavigator:
     def __init__(self):
         rospy.init_node('gps_goal_move_base')
-
 
         # ─── Initialize variables ────────────────────────────────────
         self.waypoints = []
@@ -32,8 +26,7 @@ class WaypointNavigator:
         self.prev_mavros_mode = None
         self.last_fsm_state = None
         self.last_sent_goal = None
-        self.paused_goal       = None
-
+        self.paused_goal = None
 
         self.current_lat = None
         self.current_lon = None
@@ -42,11 +35,11 @@ class WaypointNavigator:
         self.current_local_z = 0.0
         self.current_yaw = 0.0
 
-        self.origin_lat     = 0.0
-        self.origin_lon     = 0.0
+        self.origin_lat = 0.0
+        self.origin_lon = 0.0
         self.origin_local_x = 0.0
         self.origin_local_y = 0.0
-        
+
         self.last_update_position = None
         self.got_odom = False
 
@@ -59,21 +52,20 @@ class WaypointNavigator:
         # get GPS + odom + waypoints early, but DO NOT yet subscribe to FSM
         rospy.Subscriber('/mavros/global_position/global',
                          NavSatFix, self.current_gps_callback)
-        
+
         rospy.Subscriber('/mavros/local_position/odom',
                          Odometry, self.current_local_position_callback)
-        
+
         rospy.Subscriber('/mavros/state',
                          State, self.mavros_state_callback)
-        
-        # give ROS a moment to connect  
+
+        # give ROS a moment to connect
         rospy.sleep(0.5)
         # ─────────────────────────────────────────────────────────
-        
 
         # WAITING FOR GUIDED MODE
-        timeout   = rospy.Duration(10)  # give 10 seconds
-        start     = rospy.Time.now()
+        timeout = rospy.Duration(10)  # give 10 seconds
+        start = rospy.Time.now()
 
         rospy.loginfo("Waiting for GUIDED mode (timeout %.1fs)…", timeout.to_sec())
         rate = rospy.Rate(2)  # 2 Hz
@@ -90,19 +82,13 @@ class WaypointNavigator:
                 return
 
             rate.sleep()
-    
 
         # pull mission from Pixhawk
         rospy.loginfo("Pilot turned on GUIDED mode, proceeding.")
-        # after geo.update_origin(...)
-        if WP_SOURCE == "mission":
-            self.pull_waypoints()
-            rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.waypoints_callback)
-            
-        else:  # "file"
-            self.load_local_csv_waypoints(FILE_PATH)
-            rospy.loginfo("Loaded %d file waypoints from %s", len(self.local_wps), FILE_PATH)
-            print(f"waypoints: {self.local_wps}")
+        self.pull_waypoints()
+
+        rospy.Subscriber('/mavros/mission/waypoints',
+                         WaypointList, self.waypoints_callback)
 
         # wait for GPS and odometry before proceeding
         rospy.loginfo("Waiting for first GPS message…")
@@ -117,21 +103,19 @@ class WaypointNavigator:
                       self.current_lat, self.current_lon)
 
         # now that we have a fix, set our map origin
-        self.origin_lat     = self.current_lat
-        self.origin_lon     = self.current_lon
+        self.origin_lat = self.current_lat
+        self.origin_lon = self.current_lon
         self.origin_local_x = self.current_local_x
         self.origin_local_y = self.current_local_y
         rospy.loginfo("Origin set → lat=%.6f lon=%.6f  x=%.2f y=%.2f",
                       self.origin_lat, self.origin_lon,
                       self.origin_local_x, self.origin_local_y)
-        
+
         # now that origin is valid, create your Geo helper
         self.geo.update_origin(self.origin_lat,
-                                self.origin_lon,
-                                self.origin_local_x,
-                                self.origin_local_y)
-
-        
+                               self.origin_lon,
+                               self.origin_local_x,
+                               self.origin_local_y)
 
         # let callbacks drive waypoint publication
         # only now subscribe to FSM state changes
@@ -204,7 +188,7 @@ class WaypointNavigator:
         p = msg.pose.pose.position
         self.current_local_x = p.x
         self.current_local_y = p.y
-        self.current_local_z = p.z 
+        self.current_local_z = p.z
         self.got_odom = True
         q = msg.pose.pose.orientation
         self.current_yaw = self.geo.quat_to_yaw(q)
@@ -214,10 +198,9 @@ class WaypointNavigator:
         prev = self.last_fsm_state
         if state == prev:
             return
-            
+
         rospy.loginfo(f"[FSM] State changed {prev} → {state}")
         self.last_fsm_state = state
-    
 
         if state == 'INIT':
             self.advance_to_next_waypoint()
@@ -226,71 +209,57 @@ class WaypointNavigator:
             pass
         # if moving from either WAIT_GOAL or FOLLOW_TRAJ -> to WAIT_GOAL again
         elif prev != 'INIT' and state == 'WAIT_GOAL':
-            hold_secs = 3.0   # ← how many seconds you want to wait
+            hold_secs = 3.0  # ← how many seconds you want to wait
             rospy.loginfo(f"Holding for {hold_secs:.1f}s before next waypoint…")
             rospy.sleep(hold_secs)
             self.advance_to_next_waypoint()
-        
 
     def advance_to_next_waypoint(self):
+        # guard against missing origin
         if not hasattr(self, 'origin_lat'):
             rospy.logwarn("Origin not set yet; skipping waypoint publish")
             return
 
-        if self.current_goal_index is None:
-            self.current_goal_index = 0
-
-        src   = 'mission' if WP_SOURCE == 'mission' else 'file'
-        total = len(self.waypoints) if src == 'mission' else len(self.local_wps)
-        rospy.loginfo(f"[ADV] src={src} idx={self.current_goal_index} total={total}")
-
-        if self.current_goal_index >= total:
+        if self.current_goal_index >= len(self.waypoints):
             rospy.loginfo("All waypoints done — shutting down.")
             rospy.signal_shutdown("Mission complete")
             return
 
-        if src == 'mission':
-            wp      = self.waypoints[self.current_goal_index]
-            yaw_rad = self.wp_headings[self.current_goal_index]
-            goal    = self.geo.make_pose(wp.x_lat, wp.y_long, wp.z_alt, yaw_rad)
-        else:  # file
-            rec     = self.local_wps[self.current_goal_index]   # {"pos":(x,y,z), "yaw":...}
-            x,y,z   = rec["pos"]
-            yaw_rad = rec["yaw"]
-            goal    = PoseStamped()
-            goal.header.frame_id = rospy.get_param("~frame_id", "world")
-            goal.pose.position.x, goal.pose.position.y, goal.pose.position.z = x, y, z
-            qx, qy, qz, qw = self.geo.yaw_to_quat(yaw_rad)  # ensure this returns plain floats, not a Quaternion msg
-            goal.pose.orientation.x = float(qx)
-            goal.pose.orientation.y = float(qy)
-            goal.pose.orientation.z = float(qz)
-            goal.pose.orientation.w = float(qw)
+        wp = self.waypoints[self.current_goal_index]
 
+        print(wp)
+        lat, lon, alt = wp.x_lat, wp.y_long, wp.z_alt
+        yaw_rad = self.wp_headings[self.current_goal_index]
+
+        goal = self.geo.make_pose(lat, lon, alt, yaw_rad)
         goal.header.stamp = rospy.Time.now()
         self.goal_pub.publish(goal)
         self.last_sent_goal = goal
-
         yaw_deg = (math.degrees(yaw_rad) + 360) % 360
-        rospy.loginfo(f"→ Published wp #{self.current_goal_index} ({src}) -- "
-                    f"x:{goal.pose.position.x:.2f}, y:{goal.pose.position.y:.2f}, "
-                    f"z:{goal.pose.position.z:.2f}, yaw:{yaw_deg:.1f}°")
+
+        rospy.loginfo(
+            f"→ Published waypoint #{self.current_goal_index}"
+            f" -- x: {goal.pose.position.x:.2f},"
+            f" y: {goal.pose.position.y:.2f},"
+            f" z: {goal.pose.position.z:.2f},"
+            f" yaw: {yaw_deg:.1f}°"
+        )
 
         self.current_goal_index += 1
         self.last_update_position = (self.current_local_x, self.current_local_y)
 
-    
     def mavros_state_callback(self, msg):
         new_mode = msg.mode
-        prev     = self.prev_mavros_mode
+        prev = self.prev_mavros_mode
         self.prev_mavros_mode = new_mode
         self.current_mavros_mode = msg.mode
 
         # GUIDED into LOITER?
         if prev == "GUIDED" and new_mode == "LOITER":
-            rospy.loginfo("Mode LOITER: pausing on goal #%d", self.current_goal_index-1)
+            rospy.loginfo("Mode LOITER: pausing on goal #%d", self.current_goal_index - 1)
             self.paused_goal = self.last_sent_goal
 
-        #  LOITER back into GUIDED?
+        # LOITER back into GUIDED?
         if prev == "LOITER" and new_mode == "GUIDED" and self.paused_goal:
             # stamp it fresh and re‐publish
             self.paused_goal.header.stamp = rospy.Time.now()
@@ -298,46 +267,12 @@ class WaypointNavigator:
             rospy.loginfo("Mode GUIDED: re-publishing paused goal")
             self.paused_goal = None
 
-
     def has_taken_off(self, hover_threshold=1):
         if self.current_local_z is None:
             return False
         return self.current_local_z >= hover_threshold
-    
 
-    def load_local_csv_waypoints(self, path):
-        """Parse x,y,z,qx,qy,qz,qw per line → list of dicts."""
-        wps = []
-        with open(path, 'r') as f:
-            for ln in f:
-                ln = ln.strip()
-                if not ln or ln.startswith('#'):
-                    continue
-                parts = [p.strip() for p in ln.split(',')]
-                if len(parts) != 7:
-                    rospy.logwarn(f"Skipping malformed line: {ln}")
-                    continue
-                x,y,z,qx,qy,qz,qw = map(float, parts)
-
-                # (optional) normalize quaternion in case of float drift
-                n = math.sqrt(qx*qx + qy*qy + qz*qz + qw*qw)
-                if n > 0:
-                    qx,qy,qz,qw = qx/n, qy/n, qz/n, qw/n
-
-                # (optional) compute yaw if you want it around later
-                yaw = self.geo.quat_xyzw_to_yaw(qx, qy, qz, qw)  # add this tiny util or reuse TransformUtils
-
-                wps.append({
-                    "pos": (x, y, z),
-                    "quat": (qx, qy, qz, qw),
-                    "yaw": yaw,  # handy if you later want Z-only orientation
-                })
-        if not wps:
-            rospy.logwarn(f"No waypoints loaded from {path}")
-        self.local_wps = wps
-        self.current_goal_index = 0
-
-    # unused -- but keep here 
+    # unused -- but keep here
     def update_goal_if_needed(self):
         # Optional: re-send the same waypoint if you drift too far
         if self.last_update_position is None:
@@ -364,6 +299,7 @@ class WaypointNavigator:
         goal.header.stamp = rospy.Time.now()
         self.goal_pub.publish(goal)
         self.last_update_position = (self.current_local_x, self.current_local_y)
+
 
 if __name__ == '__main__':
     try:
