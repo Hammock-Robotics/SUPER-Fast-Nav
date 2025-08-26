@@ -1,0 +1,640 @@
+<?xml version="1.0" ?>
+<robot name="final_iris" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+  <!-- Dummy link -->
+  <link name="dummy_link"/>
+
+  <!-- Fixed joint between dummy_link and base_link 0.195-->
+  <joint name="fixed_joint" type="fixed">
+    <parent link="dummy_link"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.195" rpy="0 0 0"/>
+    <!-- <origin xyz="0 0 0.05" rpy="0 0 0"/> -->
+  </joint>
+
+
+
+  <link name="base_link">
+    <inertial>
+      <mass value="1.5"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.008" ixy="0" ixz="0" iyy="0.015" iyz="0" izz="0.017"/>
+    </inertial>
+    <collision name="base_link">
+      <origin rpy="0 0 0" xyz="0      0      -0.08"/>
+      <geometry>
+        <box size="0.47 0.47 0.23"/>
+      </geometry>
+    </collision>
+    <visual>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/iris.dae" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.123   0.22    -0.11"/>
+      <geometry>
+        <cylinder length="0.17" radius="0.005"/>
+      </geometry>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.123   -0.22     -0.11"/>
+      <geometry>
+        <cylinder length="0.17" radius="0.005"/>
+      </geometry>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.14     0.21     -0.11"/>
+      <geometry>
+        <cylinder length="0.17" radius="0.005"/>
+      </geometry>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.14    -0.21     -0.11"/>
+      <geometry>
+        <cylinder length="0.17" radius="0.005"/>
+      </geometry>
+    </visual>
+  </link>
+
+
+
+  <link name="lidar_link">
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+               iyy="0.0001" iyz="0.0" 
+               izz="0.0001"/>
+    </inertial>
+    
+    
+    
+    <visual name="lidar_visual">
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+      <material name="lidar_color">
+        <color rgba="0.0 0.0 1.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0.0 0.0 0.1" rpy="0.0 0.0 0.0"/>
+  </joint>
+
+  
+  <gazebo reference="lidar_link">
+    <sensor type="ray" name="laser_livox">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+      
+     
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>100</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.1415926535897931</min_angle>
+            <max_angle>3.1415926535897931</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>50</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.122173</min_angle>
+            <max_angle>0.907571</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.1</min>
+          <max>40</max>
+          <resolution>1</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.0</stddev>
+        </noise>
+      </ray>
+      
+      
+      <!-- Plugin for the Livox lidar instead of the velodyne -->
+      <plugin name="gazebo_ros_laser_controller" filename="liblivox_laser_simulation.so">
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>100</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.1415926535897931</min_angle>
+              <max_angle>3.1415926535897931</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>50</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.122173</min_angle>
+              <max_angle>0.907571</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.1</min>
+            <max>40</max>
+            <resolution>1</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.0</stddev>
+          </noise>
+        </ray>
+        <visualize>true</visualize>
+        <samples>20000</samples>
+        <downsample>1</downsample>
+        <csv_file_name>mid360-real-centr.csv</csv_file_name>
+        <!-- Change PointCloud type here -->
+        <publish_pointcloud_type>3</publish_pointcloud_type>
+        <ros_topic>/livox/lidar</ros_topic>
+        <frameName>base_link</frameName>
+      </plugin>
+    </sensor>
+    
+    
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+
+
+
+
+  <joint name="final_iris/ground_truth/odometry_sensorgt_joint" type="revolute">
+    <parent link="dummy_link"/>
+    <child link="final_iris/ground_truth/odometry_sensorgt_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="1.0"/>
+    <limit effort="0.0" lower="0.0" upper="0.0" velocity="0.0"/>
+  </joint>
+
+  <link name="final_iris/ground_truth/odometry_sensorgt_link">
+    <inertial>
+      <mass value="0.15"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
+    </inertial>
+  </link>
+
+  <joint name="final_iris/imu_joint" type="revolute">
+    <parent link="dummy_link"/>
+    <child link="final_iris/imu_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="1.0"/>
+    <limit effort="0.0" lower="0.0" upper="0.0" velocity="0.0"/>
+  </joint>
+
+  <link name="final_iris/imu_link">
+    <inertial>
+      <mass value="0.15"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00002" iyz="0" izz="0.00002"/>
+    </inertial>
+  </link>
+
+  <joint name="rotor_0_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_0"/>
+    <origin rpy="0 0 0" xyz="0.13 -0.22 0.023"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_1_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_1"/>
+    <origin rpy="0 0 0" xyz="-0.13 0.2 0.023"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_2_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_2"/>
+    <origin rpy="0 0 0" xyz="0.13 0.22 0.023"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+  <joint name="rotor_3_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="rotor_3"/>
+    <origin rpy="0 0 0" xyz="-0.13 -0.2 0.023"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.004"/>
+    <!-- <limit effort="2000.0" lower="-1e+16" upper="1e+16" velocity="838.0"/> -->
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="1000" velocity="100"/> -->
+    <limit effort="-1" lower="-1e+16" upper="1e+16" velocity="-1"/>
+    <!-- <limit lower="-1e+16" upper="1e+16" effort="0" velocity="0"/> -->
+
+  </joint>
+
+
+  <link name="rotor_0">
+    <inertial>
+      <mass value="0.025"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <collision name="rotor_0">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision>
+    <visual name="rotor_0">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/iris_prop_ccw.dae" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_1">
+    <inertial>
+      <mass value="0.025"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <collision name="rotor_1">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision>
+    <visual name="rotor_1">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/iris_prop_ccw.dae" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_2">
+    <inertial>
+      <mass value="0.025"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <collision name="rotor_2">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision>
+    <visual name="rotor_2">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/iris_prop_cw.dae" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="rotor_3">
+    <inertial>
+      <mass value="0.025"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="9.75e-06" ixy="0" ixz="0" iyy="0.000166704" iyz="0" izz="0.000167604"/>
+    </inertial>
+    <collision name="rotor_3">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.1"/>
+      </geometry>
+    </collision>
+    <visual name="rotor_3">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://iq_sim/models/iris_base/meshes/iris_prop_cw.dae" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+
+  <gazebo reference="base_link">
+  	<material>Gazebo/FlatBlack</material>
+  	<maxVel>100.0</maxVel>
+  	<minDepth>0.001</minDepth>
+  	<mu1>1.0</mu1>
+  	<mu2>1.0</mu2>
+    <velocity_decay>
+      <linear>0.0</linear>
+      <angular>0.0</angular>
+    </velocity_decay>
+  </gazebo>
+
+  <gazebo reference="final_iris/ground_truth/odometry_sensorgt_joint">
+  	<implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="final_iris/imu_joint">
+  	<implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="final_iris/imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <pose>0 0 0 3.141593 0 0</pose>
+      <always_on>1</always_on>
+      <update_rate>1000.0</update_rate>    
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+          <topicName>imu</topicName>
+          <bodyName>final_iris/imu_link</bodyName>
+          <updateRateHZ>10.0</updateRateHZ>
+          <gaussianNoise>0.0</gaussianNoise>
+          <xyzOffset>0 0 0</xyzOffset>
+          <rpyOffset>0 0 0</rpyOffset>
+          <frameName>final_iris/imu_link</frameName>
+          <initialOrientationAsReference>false</initialOrientationAsReference>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="rotor_0">
+    <material>Gazebo/Blue</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_0_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_1">
+    <material>Gazebo/DarkGrey</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_1_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_2">
+    <material>Gazebo/Blue</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_2_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo reference="rotor_3">
+    <material>Gazebo/DarkGrey</material>
+    <selfCollide>0</selfCollide>
+  </gazebo>
+
+  <gazebo reference="rotor_3_joint">
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_0_blade_1" filename="libLiftDragPlugin.so">
+      <a0>0.1</a0>
+      <alpha_stall>1.4</alpha_stall>
+      <cla>0.2500</cla>
+      <cda>0.10</cda>
+      <cma>0.00</cma>
+      <cla_stall>-0.025</cla_stall>
+      <cda_stall>0.0</cda_stall>
+      <cma_stall>0.0</cma_stall>
+      <area>0.2</area>
+      <air_density>1.2041</air_density>
+      <cp>0.084 0 0</cp>
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_0</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_0_blade_2" filename="libLiftDragPlugin.so">
+      <a0>0.1</a0>
+      <alpha_stall>1.4</alpha_stall>
+      <cla>0.2500</cla>
+      <cda>0.10</cda>
+      <cma>0.00</cma>
+      <cla_stall>-0.025</cla_stall>
+      <cda_stall>0.0</cda_stall>
+      <cma_stall>0.0</cma_stall>
+      <area>0.2</area>
+      <air_density>1.2041</air_density>
+      <cp>-0.084 0 0</cp>
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_0</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_1_blade_1" filename="libLiftDragPlugin.so">
+      <a0>0.1</a0>
+      <alpha_stall>1.4</alpha_stall>
+      <cla>0.2500</cla>
+      <cda>0.10</cda>
+      <cma>0.00</cma>
+      <cla_stall>-0.025</cla_stall>
+      <cda_stall>0.0</cda_stall>
+      <cma_stall>0.0</cma_stall>
+      <area>0.2</area>
+      <air_density>1.2041</air_density>
+      <cp>0.084 0 0</cp>
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_1</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_1_blade_2" filename="libLiftDragPlugin.so">
+      <a0>0.1</a0>
+      <alpha_stall>1.4</alpha_stall>
+      <cla>0.2500</cla>
+      <cda>0.10</cda>
+      <cma>0.00</cma>
+      <cla_stall>-0.025</cla_stall>
+      <cda_stall>0.0</cda_stall>
+      <cma_stall>0.0</cma_stall>
+      <area>0.2</area>
+      <air_density>1.2041</air_density>
+      <cp>-0.084 0 0</cp>
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_1</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_2_blade_1" filename="libLiftDragPlugin.so">
+      <a0>0.1</a0>
+      <alpha_stall>1.4</alpha_stall>
+      <cla>0.2500</cla>
+      <cda>0.10</cda>
+      <cma>0.00</cma>
+      <cla_stall>-0.025</cla_stall>
+      <cda_stall>0.0</cda_stall>
+      <cma_stall>0.0</cma_stall>
+      <area>0.2</area>
+      <air_density>1.2041</air_density>
+      <cp>0.084 0 0</cp>
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_2</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_2_blade_2" filename="libLiftDragPlugin.so">
+      <a0>0.1</a0>
+      <alpha_stall>1.4</alpha_stall>
+      <cla>0.2500</cla>
+      <cda>0.10</cda>
+      <cma>0.00</cma>
+      <cla_stall>-0.025</cla_stall>
+      <cda_stall>0.0</cda_stall>
+      <cma_stall>0.0</cma_stall>
+      <area>0.2</area>
+      <air_density>1.2041</air_density>
+      <cp>-0.084 0 0</cp>
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_2</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_3_blade_1" filename="libLiftDragPlugin.so">
+      <a0>0.1</a0>
+      <alpha_stall>1.4</alpha_stall>
+      <cla>0.2500</cla>
+      <cda>0.10</cda>
+      <cma>0.00</cma>
+      <cla_stall>-0.025</cla_stall>
+      <cda_stall>0.0</cda_stall>
+      <cma_stall>0.0</cma_stall>
+      <area>0.2</area>
+      <air_density>1.2041</air_density>
+      <cp>0.084 0 0</cp>
+      <forward>0 -1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_3</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="rotor_3_blade_2" filename="libLiftDragPlugin.so">
+      <a0>0.1</a0>
+      <alpha_stall>1.4</alpha_stall>
+      <cla>0.2500</cla>
+      <cda>0.10</cda>
+      <cma>0.00</cma>
+      <cla_stall>-0.025</cla_stall>
+      <cda_stall>0.0</cda_stall>
+      <cma_stall>0.0</cma_stall>
+      <area>0.2</area>
+      <air_density>1.2041</air_density>
+      <cp>-0.084 0 0</cp>
+      <forward>0 1 0</forward>
+      <upward>0 0 1</upward>
+      <link_name>final_iris::rotor_3</link_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="arducopter_plugin" filename="libArduPilotPlugin.so">
+      <fdm_addr>127.0.0.1</fdm_addr>
+      <fdm_port_in>9002</fdm_port_in>
+      <fdm_port_out>9003</fdm_port_out>
+      <modelXYZToAirplaneXForwardZDown>0 0 0 3.141593 0 0</modelXYZToAirplaneXForwardZDown>
+      <gazeboXYZToNED>0 0 0 3.141593 0 0</gazeboXYZToNED>
+      <imuName>final_iris::final_iris/imu_link::imu_sensor</imuName>
+      <connectionTimeoutMaxCount>5</connectionTimeoutMaxCount>
+      <control channel="0">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <p_gain>0.20</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>2.5</cmd_max>
+        <cmd_min>-2.5</cmd_min>
+        <jointName>final_iris::rotor_0_joint</jointName>
+        <multiplier>838</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="1">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <p_gain>0.20</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>2.5</cmd_max>
+        <cmd_min>-2.5</cmd_min>
+        <jointName>final_iris::rotor_1_joint</jointName>
+        <multiplier>838</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="2">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <p_gain>0.20</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>2.5</cmd_max>
+        <cmd_min>-2.5</cmd_min>
+        <jointName>final_iris::rotor_2_joint</jointName>
+        <multiplier>-838</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+      <control channel="3">
+        <type>VELOCITY</type>
+        <offset>0</offset>
+        <p_gain>0.20</p_gain>
+        <i_gain>0</i_gain>
+        <d_gain>0</d_gain>
+        <i_max>0</i_max>
+        <i_min>0</i_min>
+        <cmd_max>2.5</cmd_max>
+        <cmd_min>-2.5</cmd_min>
+        <jointName>final_iris::rotor_3_joint</jointName>
+        <multiplier>-838</multiplier>
+        <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
+      </control>
+    </plugin>
+  </gazebo>  
+
+
+</robot>
+
+

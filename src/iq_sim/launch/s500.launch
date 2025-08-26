@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<launch>
+
+    
+    <!-- Static transform publisher to connect world to the map -->
+    <node pkg="tf" type="static_transform_publisher" name="world_to_camera_init" args="0 0 0 0 0 0 world camera_init 100"/>
+       
+    <!-- <node pkg="iq_sim" type="base_footprint_broadcaster.py" name="base_footprint_broadcaster" output="screen"/> -->
+    <!-- <node pkg="iq_sim" type="point_cloud_transformer.py" name="point_cloud_transformer" output="screen"/> -->
+    <!-- <node pkg="iq_sim" type="point_cloud_mount_filter_livox.py" name="point_mount_filter" output="screen"/> -->
+
+    <node pkg="iq_sim" type="super_to_mavros_v2.py" name="super_to_mavros" output="screen"/>
+    <node pkg="iq_sim" type="fastlio_to_mavros_viso.py" name="fastlio_to_mavros_viso" output="screen"/>
+
+    <!-- <node pkg="iq_sim" type="send_waypoint_v2.py" name="send_waypoint" output="screen"/> -->
+    <node pkg="iq_sim" type="save_waypoint_rc.py" name="save_waypoint_rc" output="screen"/>
+
+    <node pkg="iq_sim" type="send_waypoint_v2.py" name="send_waypoint" output="screen">
+        <param name="pause_sec" value="2"/>
+    </node>
+
+    <!-- <node pkg="iq_sim" type="send_waypoint_mp.py" name="send_waypoint" output="screen">
+        <param name="pause_sec" value="2"/>
+    </node> -->
+
+    <!-- <node pkg="iq_sim" type="rc_controller.py" name="rc_controller" output="screen"/> -->
+    <!-- <node pkg="iq_sim" type="rc_bridge.py" name="rc_bridge" output="screen"/> -->
+
+    <param name="robot_description" command="xacro '$(find iq_sim)/urdf/s500_dummy.urdf.xacro' "/>
+
+    <!-- Other necessary nodes -->
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+   
+
+    <!-- APM / SITL launch (from iq_sim package) -->
+    <include file="$(find iq_sim)/launch/apm.launch"/>
+
+      
+    <!-- <include file="$(find fast_lio)/launch/mapping_mid360.launch"> -->
+  
+
+
+ 
+</launch>

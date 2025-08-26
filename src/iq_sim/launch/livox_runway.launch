@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Include the empty world launch file -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find iq_sim)/worlds/forest_trees_plot.world"/>
+        <!-- <arg name="world_name" value="$(find iq_sim)/worlds/willow_world_forest.world"/> -->
+        <!-- <arg name="world_name" value="$(find iq_sim)/worlds/runway.world"/> -->
+        <!-- <arg name="world_name" value="$(find hector_gazebo_worlds)/worlds/willow_garage.world"/> -->
+    </include>
+
+    <!-- Load the robot description parameter -->
+    <!--<param name="robot_description" command="xacro '$(find iq_sim)/urdf/final_iris.urdf.xacro' "/>--> 
+     <!--<param name="robot_description" command="xacro '$(find iq_sim)/urdf/final_bm2.urdf.xacro' "/>-->
+     <param name="robot_description" command="xacro '$(find iq_sim)/urdf/final_iris_livox.urdf.xacro' "/> 
+    
+    <!-- Spawn the robot in Gazebo -->
+    <!--<arg name="model" default="$(find iq_sim)/urdf/final_iris_livox.urdf.xacro"/>
+    <param name="robot_description" command="$(find xacro)/xacro '$(arg model)'" />-->
+
+    <node name="spawn_iris" pkg="gazebo_ros" type="spawn_model"
+      args="-urdf -param robot_description -model final_iris -x 0 -y 0 -z 0.2" />
+
+     <!-- <node name="spawn_livox" pkg="gazebo_ros" type="spawn_model"
+      args="-file $(find livox_laser_simulation)/models/sensors_only/model.sdf -sdf -model livox_sensor -x 0 -y 0 -z 0.2" />-->
+
+
+
+    <!-- Static transform publisher to connect world to the map -->
+    <node pkg="tf" type="static_transform_publisher" name="world_to_camera_init" args="0 0 0 0 0 0 world camera_init 100"/>
+    <!-- <node pkg="tf" type="static_transform_publisher" name="dummy_link_to_body" args="0 0 0 0 0 0 body dummy_link 100"/> -->
+
+    
+
+   
+    <node pkg="iq_sim" type="point_cloud_transformer.py" name="point_cloud_transformer" output="screen"/>
+    <node pkg="iq_sim" type="point_cloud_mount_filter.py" name="point_mount_filter" output="screen"/>
+    <node pkg="iq_sim" type="super_to_mavros_v2.py" name="super_to_mavros" output="screen"/>
+    <node pkg="iq_sim" type="fastlio_to_mavros_viso.py" name="fastlio_to_mavros_viso" output="screen"/>
+
+    
+    <!-- Other necessary nodes -->
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+    <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="joint_state_publisher_gui"/>
+
+    <!-- <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="10.0"/> 
+    </node> -->
+  
+  
+    <!-- <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="joint_state_publisher_gui">
+        <param name="rate" type="double" value="10.0"/> 
+    </node> -->
+
+    
+</launch>
