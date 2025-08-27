@@ -17,3 +17,6 @@ terrain
 **.bin
 **.zip
 **.ply
+*.parm
+*.tlog
+*.bin
