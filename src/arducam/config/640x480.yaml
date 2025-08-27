@@ -1,0 +1,27 @@
+video_device: "/dev/video0"
+framerate: 30.0
+io_method: "mmap"
+frame_id: "camera_link"
+pixel_format: "yuyv"              # use uncompressed YUYV format
+av_device_format: "YUV422P"
+image_width: 640
+image_height: 480
+camera_name: "arducam_b0527"
+camera_info_url: "package://arducam/config/arducam_b0527.yaml"
+
+# Camera controls (set -1 for default / driver-controlled)
+brightness: -1
+contrast: -1
+saturation: -1
+sharpness: -1
+gain: -1
+
+# White balance and exposure
+# auto_white_balance: true
+white_balance: 4000
+autoexposure: true
+exposure: 100
+
+# Focus
+autofocus: false
+focus: -1
