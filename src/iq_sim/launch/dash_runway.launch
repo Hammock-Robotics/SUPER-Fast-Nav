@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-
+    <env name="GAZEBO_MODEL_PATH" value="$(find iq_sim)/models"/>
     <!-- Include the empty world launch file -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find iq_sim)/worlds/palm_oil_estate.world"/>
@@ -10,7 +10,8 @@
     </include>
 
     <!-- Load the robot description parameter -->
-     <param name="robot_description" command="xacro '$(find iq_sim)/urdf/final_iris_livox.urdf.xacro' "/> 
+    <param name="robot_description" command="xacro '$(find iq_sim)/urdf/final_iris_livox.urdf.xacro' "/> 
+    <!-- <param name="robot_description" command="xacro '$(find iq_sim)/urdf/final_iris_livox_test.urdf.xacro' "/>  -->
     <!--<param name="robot_description" command="xacro '$(find iq_sim)/urdf/final_bm2.urdf.xacro' "/>-->
     
     <!-- Spawn the robot in Gazebo -->
@@ -21,33 +22,28 @@
     <node pkg="tf" type="static_transform_publisher" name="world_to_camera_init" args="0 0 0 0 0 0 world camera_init 100"/>
     <!-- <node pkg="tf" type="static_transform_publisher" name="dummy_link_to_body" args="0 0 0 0 0 0 body dummy_link 100"/> -->
     
-    <node pkg="tf" type="static_transform_publisher" name="world_to_test"
-      args="1.0 2.0 3.0 0 0 0 world test 100"/>
+    <!-- <node pkg="tf" type="static_transform_publisher" name="world_to_test"
+      args="1.0 2.0 3.0 0 0 0 world test 100"/> -->
 
     
 
     <!-- <node pkg="iq_sim" type="base_footprint_broadcaster.py" name="base_footprint_broadcaster" output="screen"/> -->
-    <node pkg="iq_sim" type="point_cloud_transformer.py" name="point_cloud_transformer" output="screen"/>
-    <node pkg="iq_sim" type="point_cloud_mount_filter.py" name="point_mount_filter" output="screen"/>
-    <node pkg="iq_sim" type="super_to_mavros_v2.py" name="super_to_mavros_v2" output="screen"/>
-    <!-- <node pkg="iq_sim" type="super_to_mavros.py" name="super_to_mavros" output="screen"/> -->
+    <!-- <node pkg="iq_sim" type="point_cloud_transformer.py" name="point_cloud_transformer" output="screen"/> -->
+    <!-- <node pkg="iq_sim" type="point_cloud_mount_filter_livox.py" name="point_mount_filter" output="screen"/> -->
+
+    <node pkg="iq_sim" type="super_to_mavros_v2.py" name="super_to_mavros" output="screen"/>
     <node pkg="iq_sim" type="fastlio_to_mavros_viso.py" name="fastlio_to_mavros_viso" output="screen"/>
+
+    <!-- <node pkg="iq_sim" type="send_waypoint.py" name="send_waypoint" output="screen"/> -->
+    <node pkg="iq_sim" type="save_waypoint_rc.py" name="save_waypoint_rc" output="screen"/>
+    <!-- <node pkg="iq_sim" type="rc_controller.py" name="rc_controller" output="screen"/>
+    <node pkg="iq_sim" type="rc_bridge.py" name="rc_bridge" output="screen"/> -->
 
     
     <!-- Other necessary nodes -->
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
 
     <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="joint_state_publisher_gui"/>
-
-    <!-- <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
-        <param name="publish_frequency" type="double" value="10.0"/> 
-    </node> -->
-  
-  
-    <!-- <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="joint_state_publisher_gui">
-        <param name="rate" type="double" value="10.0"/> 
-    </node> -->
-
     
 </launch>
 

@@ -10,11 +10,11 @@ from typing import List, Tuple
 HOME_LAT = -35.3632621
 HOME_LON = 149.1652374
 spacing = 9
-rows = 5
+rows = 2
 TREE_COORDS = [(i*spacing, j*spacing) for i in range(rows) for j in range(rows) if not (i == 0 and j == 0)]
 RADIUS = 1.5
-NUM_POINTS = 4
-ALTITUDE = 3.5
+NUM_POINTS = 2
+ALTITUDE = 3
 HOLD_TIME = 2.0
 YAW_RATE = 30.0
 OUTPUT_FILE = Path("multi_tree_orbit.waypoints")
