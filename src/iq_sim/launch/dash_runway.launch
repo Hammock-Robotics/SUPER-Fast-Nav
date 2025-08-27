@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-
+    <env name="GAZEBO_MODEL_PATH" value="$(find iq_sim)/models"/>
     <!-- Include the empty world launch file -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find iq_sim)/worlds/palm_oil_estate.world"/>
