@@ -1,13 +1,22 @@
-# Ignore build, devel, install, logs
-/build/
-/devel/
-/install/
-/logs/
-
-# Temporary files
-*.swp
-.catkin_tools/
-
-# ignore Python bytecode
-__pycache__/
-*.py[cod]
+build/
+devel
+logs
+terrain
+.catkin_tools
+*.parm
+*.tlog*
+*.bin
+**.DS_Store
+**/build
+**/devel
+**/cmake-build-debug
+**/.idea
+**.bag
+**/.catkin_workspace
+**.csv
+**.bin
+**.zip
+**.ply
+*.parm
+*.tlog
+*.bin

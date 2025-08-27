@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rospy
 import math
 from mavros_msgs.srv import WaypointPull

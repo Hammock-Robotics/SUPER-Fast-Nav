@@ -1,0 +1,14 @@
+<!-- my_node.launch -->
+<launch>
+
+
+
+  <!-- USB camera node -->
+  <node name="usb_cam_node" pkg="usb_cam" type="usb_cam_node" output="screen">
+    <rosparam file="$(find arducam)/config/640x480.yaml" command="load"/>
+  </node>
+
+  <!-- RViz node -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find arducam)/rviz/camera_view.rviz" required="true" />
+</launch>
+

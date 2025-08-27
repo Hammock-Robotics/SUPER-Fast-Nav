@@ -20,7 +20,7 @@ class WaypointLooper:
         self.bot_min  = float(rospy.get_param("~bot_min", 1800.0))   # >= BOT (~2000)
 
         # NEW: pause between waypoints (seconds)
-        self.pause_sec = float(rospy.get_param("~pause_sec", 3.0))
+        self.pause_sec = float(rospy.get_param("~pause_sec", 2.0))
 
         # ---------------- State ----------------
         self.waypoints    = []       # loaded only on trigger
@@ -224,4 +224,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
