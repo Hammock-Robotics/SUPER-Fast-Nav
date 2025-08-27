@@ -1,7 +1,7 @@
 BUILD_DIR=build
-if [ -d $BUILD ]; then
-  rm -rf $BUILD
+if [ -d $BUILD_DIR ]; then
+  rm -rf $BUILD_DIR
 fi
-mkdir $BUILD && cd $BUILD
+mkdir $BUILD_DIR && cd $BUILD_DIR
 cmake ..
 make
