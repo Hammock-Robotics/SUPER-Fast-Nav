@@ -16,3 +16,5 @@ sudo ./install_geographiclib_datasets.sh
 sudo apt install libdw-dev
 sudo apt install libncurses5-dev libncursesw5-dev
 
+sudo apt-get install gazebo11 libgazebo11-dev
+
