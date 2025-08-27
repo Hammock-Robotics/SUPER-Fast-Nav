@@ -18,3 +18,4 @@ sudo apt install libncurses5-dev libncursesw5-dev
 
 sudo apt-get install gazebo11 libgazebo11-dev
 
+tsudo apt-get install python3-geographicliberrain
