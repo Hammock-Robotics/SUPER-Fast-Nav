@@ -1,14 +1,13 @@
-<!-- my_node.launch -->
 <launch>
-
-
+  <!-- Declare an argument for the YAML config -->
+  <arg name="config_file" default="$(find arducam)/config/1280x720.yaml" />
 
   <!-- USB camera node -->
-  <node name="usb_cam_node" pkg="usb_cam" type="usb_cam_node" output="screen">
-    <rosparam file="$(find arducam)/config/1280x720.yaml" command="load"/>
+  <node name="usb_cam_node" pkg="arducam" type="usb_cam_node" output="screen">
+    <rosparam file="$(arg config_file)" command="load"/>
   </node>
 
   <!-- RViz node -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find arducam)/rviz/camera_view.rviz" required="true" />
+  <arg name="rviz_config" default="$(find arducam)/rviz/camera_view.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)" required="true" />
 </launch>
-

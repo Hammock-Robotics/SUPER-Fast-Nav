@@ -8,6 +8,7 @@ image_height: 720
 camera_name: arducam_b0527
 camera_info_url: "package://arducam/cameras/arducam_b0527.yaml"
 camera_frame_id: camera_link
+# autofocus: false
 
 # av_device_format: "YUV422P"
 # capture_dir: captures/

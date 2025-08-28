@@ -1,0 +1,28 @@
+video_device: "/dev/video0"
+framerate: 30.0
+io_method: "mmap"
+frame_id: "camera_link"
+pixel_format: "yuyv"          # must match device output (YUYV 4:2:2)
+image_width: 8160
+image_height: 6144 
+camera_name: arducam_b0527
+camera_info_url: "package://arducam/cameras/arducam_b0527.yaml"
+camera_frame_id: camera_link
+# autofocus: false
+
+# av_device_format: "YUV422P"
+# capture_dir: captures/
+
+
+# --- V4L2 Controls (defaults from your list) ---
+brightness: 0                # range: -64 → 64, default: 0
+contrast: 10                 # range: 0 → 20, default: 10
+saturation: 10               # range: 0 → 15, default: 10
+white_balance_automatic: true
+gain: 100                    # range: 100 → 6400, default: 100
+white_balance_temperature: 4500   # inactive unless auto WB = false
+
+# --- Camera controls ---
+auto_exposure: 0             # 0 = Auto Mode (default)
+exposure_time_absolute: 5    # inactive when auto_exposure=0
+focus_absolute: 380          # default value = 307 (your driver reports 408 now)

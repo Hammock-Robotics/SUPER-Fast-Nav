@@ -1,0 +1,6 @@
+string filename
+uint32 width
+uint32 height
+---
+bool success
+string saved_path
