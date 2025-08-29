@@ -3,7 +3,7 @@
     <env name="GAZEBO_MODEL_PATH" value="$(find iq_sim)/models"/>
     <!-- Include the empty world launch file -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" value="$(find iq_sim)/worlds/simple_palm_oil_estate.world"/>
+        <arg name="world_name" value="$(find iq_sim)/worlds/palm_oil_estate.world"/>
         <!-- <arg name="world_name" value="$(find iq_sim)/worlds/willow_world_forest.world"/> -->
         <!-- <arg name="world_name" value="$(find iq_sim)/worlds/runway.world"/> -->
         <!-- <arg name="world_name" value="$(find hector_gazebo_worlds)/worlds/willow_garage.world"/> -->

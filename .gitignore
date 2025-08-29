@@ -20,3 +20,4 @@ terrain
 *.parm
 *.tlog
 *.bin
+tmp/
