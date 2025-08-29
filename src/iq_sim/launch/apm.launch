@@ -44,5 +44,8 @@
 		<arg name="tgt_component" value="$(arg tgt_component)" />
 		<arg name="log_output" value="$(arg log_output)" />
 	</include>
+<<<<<<< HEAD
 	
+=======
+>>>>>>> 2001ee00a9dd5fc9b4b23c219aa9d41da04f5175
 </launch>
