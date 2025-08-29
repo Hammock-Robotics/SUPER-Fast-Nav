@@ -3,7 +3,7 @@
   <arg name="config_file" default="$(find arducam)/config/1280x720.yaml" />
 
   <!-- USB camera node -->
-  <node name="usb_cam_node" pkg="arducam" type="usb_cam_node" output="screen">
+  <node name="camera" pkg="arducam" type="usb_cam_node" output="screen">
     <rosparam file="$(arg config_file)" command="load"/>
   </node>
 

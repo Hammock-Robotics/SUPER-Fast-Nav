@@ -6,12 +6,12 @@ from mavros_msgs.msg import RCIn
 from arducam.srv import CaptureStill   # add this import at the top
 
 
-class CameraStillRCTrigger:
+class CameraStillRCTriggerNode:
     def __init__(self):
-        rospy.init_node('rc_waypoint_saver', anonymous=True)
+        rospy.init_node('capture_still_rc_trigger_node', anonymous=True)
 
         # --- Config ---
-        self.channel_idx = rospy.get_param("~channel_idx", 10)  # drone ch11 => index 10
+        self.channel_idx = rospy.get_param("~channel_idx", 4)  # drone ch11 => index 10
 
         # Hysteresis thresholds (µs)
         self.top_max = rospy.get_param("~top_max", 1300)        # < 1300 -> TOP
@@ -24,7 +24,7 @@ class CameraStillRCTrigger:
         self.last_trigger_time = rospy.Time(0)
 
         # --- Subs ---
-        self.capture_srv = rospy.ServiceProxy("/camera/still_capture", CaptureStill)
+        self.capture_srv = rospy.ServiceProxy("/camera/capture_still", CaptureStill)
         # rospy.Subscriber("/mavros/local_position/odom", Odometry, self.odom_cb, queue_size=1)
         rospy.Subscriber("/mavros/rc/in", RCIn, self.rc_cb, queue_size=10)
 
@@ -37,9 +37,9 @@ class CameraStillRCTrigger:
         try:
             resp = self.capture_srv()
             if resp.success:
-                rospy.loginfo("✅ Picture taken: %s" % resp.message)
+                rospy.loginfo("✅ Still taken and saved to (%s)" % resp.saved_path)
             else:
-                rospy.logwarn("⚠️ Capture failed: %s" % resp.message)
+                rospy.logwarn("⚠️ Capture failed.")
         except rospy.ServiceException as e:
             rospy.logerr("❌ Service call failed: %s" % str(e))
 
@@ -61,13 +61,14 @@ class CameraStillRCTrigger:
             return
         pwm = msg.channels[self.channel_idx]
         cur_state = self.rc_state_from_pwm(pwm)
+        print(pwm, cur_state)
 
         # Detect MID -> TOP edge
         if self.prev_rc_state == "MID" and cur_state == "TOP":
             # Debounce
             now = rospy.Time.now()
             if (now - self.last_trigger_time).to_sec() >= self.debounce_sec:
-                self.save_waypoint()
+                self.take_picture()
                 self.last_trigger_time = now
 
         self.prev_rc_state = cur_state
@@ -76,4 +77,4 @@ class CameraStillRCTrigger:
         rospy.spin()
 
 if __name__ == "__main__":
-    CameraStillRCTrigger().run()
+    CameraStillRCTriggerNode().run()
