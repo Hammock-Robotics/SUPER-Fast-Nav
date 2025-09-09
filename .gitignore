@@ -21,3 +21,5 @@ terrain
 *.tlog
 *.bin
 tmp/
+src/FAST_LIO/Log/*.txt
+
