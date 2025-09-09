@@ -3,10 +3,10 @@
 	<!-- Experimental launch script for APM based Drone -->
 
 	<!-- UDP actual drone  -->
-	<arg name="fcu_url" default="serial:///dev/ttyACM0:57600"/>  
+	<!-- <arg name="fcu_url" default="serial:///dev/ttyACM0:57600"/>   -->
 
 	<!-- UDP SITL -->
-	<!-- <arg name="fcu_url" default="udp://127.0.0.1:14550@14555" />   -->
+	<arg name="fcu_url" default="udp://127.0.0.1:14550@14555" />  
 	
 	<arg name="gcs_url" default="" />
 	<arg name="tgt_system" default="1" />
