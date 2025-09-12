@@ -16,6 +16,14 @@
     </node>
 
 
+    <!-- DETECT: high-res rog_map (no control commands) -->
+    <group ns="detect">
+        <node pkg="super_planner" type="fsm_node" name="fsm_node_detect" output="screen">
+        <param name="config_name" value="click_smooth_ros1_highres_detect.yaml" />
+        </node>
+    </group>
+
+
     <!-- <node pkg="rviz" type="rviz" name="top_down" args="-d $(find perfect_drone_sim)/rviz/top_down.rviz" output="log"/> -->
     <!-- <node pkg="rviz" type="rviz" name="fpv" args="-d $(find perfect_drone_sim)/rviz/fpv.rviz" output="log"/> -->
 
